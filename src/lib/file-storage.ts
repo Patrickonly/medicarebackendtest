@@ -37,11 +37,28 @@ export async function storeFile(
     }
   }
 
-  // filename may itself contain slashes (e.g. "4/logo-123.png") to namespace
-  // by organization, so ensure the full nested directory exists, not just
-  // the bucket-level one.
-  const destination = path.join(process.cwd(), 'public', 'uploads', bucket, filename)
-  await mkdir(path.dirname(destination), { recursive: true })
-  await writeFile(destination, bytes)
-  return { url: `/uploads/${bucket}/${filename}`, provider: 'local' }
+  // In serverless environments like Vercel, the local filesystem is read-only
+  // except for /tmp, and files written there disappear immediately. So local
+  // fallback is impossible. Instead, fallback to a base64 data URI so the
+  // receipt is stored directly in the database column as text.
+  const isVercel = process.env.VERCEL === '1' || process.env.NEXT_PUBLIC_VERCEL_ENV;
+  
+  if (isVercel) {
+    console.warn(`[FILE STORAGE] Running in Vercel. Falling back to base64 data URI for ${bucket}/${filename}`);
+    const base64 = bytes.toString('base64');
+    const dataUri = `data:${contentType};base64,${base64}`;
+    return { url: dataUri, provider: 'local' };
+  }
+
+  try {
+    const destination = path.join(process.cwd(), 'public', 'uploads', bucket, filename)
+    await mkdir(path.dirname(destination), { recursive: true })
+    await writeFile(destination, bytes)
+    return { url: `/uploads/${bucket}/${filename}`, provider: 'local' }
+  } catch (fsError: any) {
+    console.warn(`[FILE STORAGE] Local write failed, falling back to base64 data URI:`, fsError.message);
+    const base64 = bytes.toString('base64');
+    const dataUri = `data:${contentType};base64,${base64}`;
+    return { url: dataUri, provider: 'local' };
+  }
 }
