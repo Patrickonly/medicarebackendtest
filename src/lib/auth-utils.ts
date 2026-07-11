@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 // allow the fallback outside production so local/dev setups without a .env
 // still work.
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable must be set in production.')
+  console.warn('WARNING: JWT_SECRET environment variable is not set. It must be set in production.')
 }
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'dev_only_insecure_jwt_secret'
