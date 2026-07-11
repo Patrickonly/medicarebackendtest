@@ -34,7 +34,7 @@ function withCors(res: NextResponse, origin: string | null): NextResponse {
   return res
 }
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const origin = req.headers.get('origin')
 
   // Preflight: answer immediately, don't hit the route.
