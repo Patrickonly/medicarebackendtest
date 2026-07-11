@@ -15,7 +15,7 @@ async function main() {
         },
         Customer: { select: { id: true, name: true, phone: true } },
         Branch: { select: { id: true, name: true } },
-        User_Sale_created_by_idToUser: { select: { id: true, username: true, first_name: true, last_name: true } },
+        User_Sale_created_by_idToUser: { select: { id: true, email: true, first_name: true, last_name: true } },
       },
       orderBy: { id: 'desc' },
       take: 1
